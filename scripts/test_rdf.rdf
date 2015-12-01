@@ -1,0 +1,20 @@
+<rdf:RDF
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:test="http://test.org/#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:role="http://www.loc.gov/loc.terms/relators/"
+    xmlns:collex="http://www.collex.org/schema#">
+
+    <test:test rdf:about="http://lulz.com">
+        <rdfs:seeAlso rdf:resource="http://test.org"/>
+        <dc:title>title</dc:title>
+        <dc:type>Map</dc:type>
+        <dc:date>2015</dc:date>
+        <role:CRE>Creator name</role:CRE>
+        <collex:archive>test</collex:archive>
+        <collex:discipline>Science</collex:discipline>
+        <collex:federation>GLA</collex:federation>
+        <collex:genre>Nonfiction</collex:genre>
+    </test:test>
+</rdf:RDF>
