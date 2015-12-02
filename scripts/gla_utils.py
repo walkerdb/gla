@@ -207,18 +207,66 @@ class CollexValidator:
     def validate_object(self, item):
         error_string = ""
 
-        for field in self.required_fields:
-            if len(item.xpath("{}".format(field), namespaces=self.ns)) == 0:
-                error_string += "Required field {} is missing\n".format(field)
-
-        for field in self.single_fields:
-            if len(item.xpath("{}".format(field), namespaces=self.ns)) > 1:
-                error_string += "Too many {} fields -- can only be one\n".format(field)
-
-        for date in item.xpath("dc:date", namespaces=self.ns):
-            error_string += self.validate_date(date)
+        error_string += self.check_required_fields(item)
+        error_string += self.check_for_role(item)
+        error_string += self.check_discipline_terms(item)
+        error_string += self.check_genre_terms(item)
+        error_string += self.check_fields_that_can_only_have_one_instance(item)
+        error_string += self.check_date_fields(item)
 
         return error_string
+
+    def check_date_fields(self, item):
+        error_string = ""
+        for date in self.get_child_tags(tagname="dc:date", parent=item):
+            error_string += self.validate_date(date)
+        return error_string
+
+    def check_fields_that_can_only_have_one_instance(self, item):
+        error_string = ""
+        for field in self.single_fields:
+            if len(self.get_child_tags(tagname=field, parent=item)) > 1:
+                error_string += "Too many {} fields -- can only be one".format(field)
+        return error_string
+
+    def check_required_fields(self, item):
+        error_string = ""
+        for field in self.required_fields:
+            if len(self.get_child_tags(tagname=field, parent=item)) == 0:
+                error_string += "Required field {} is missing".format(field)
+        return error_string
+
+    def check_for_role(self, item):
+        error_string = ""
+        roles = []
+        for role in self.roles:
+            roles += self.get_child_tags(tagname="role:{}".format(role), parent=item)
+
+        if not roles:
+            error_string = "At least one role is required"
+
+        return error_string
+
+    def check_discipline_terms(self, item):
+        error_string = ""
+        discipline_tags = self.get_child_tags(tagname="collex:discipline", parent=item)
+        for tag in discipline_tags:
+            if not any([tag.text == discipline for discipline in self.discipline_terms]):
+                error_string += "{} is not a valid discipline term".format(tag.text)
+        return error_string
+
+    def check_genre_terms(self, item):
+        error_string = ""
+        genre_tags = self.get_child_tags(tagname="collex:genre", parent=item)
+        for tag in genre_tags:
+            if not any([tag.text == genre for genre in self.genre_terms]):
+                error_string += "{} is not a valid genre term".format(tag.text)
+        return error_string
+
+    # TODO: write tests for disciplines and genres
+
+    def get_child_tags(self, tagname, parent):
+        return parent.xpath("{}".format(tagname), namespaces=self.ns)
 
     def validate_date(self, date_element):
         if len(date_element) > 0:
@@ -259,9 +307,6 @@ class CollexValidator:
             return "The rdf:value portion of the collex:date tag is not formatted correctly"
 
         return ""
-
-    # TODO: write test for roles
-    # TODO: write tests for disciplines and genres
 
     @staticmethod
     def is_valid_collex_date_value(text):
